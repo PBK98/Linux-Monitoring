@@ -4,20 +4,20 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt update && apt install -y \
     python3 \
+    python3-pip \
     cron \
     sudo \
     procps \
     net-tools \
     iproute2 \
     vim \
-    systemctl \
     gzip \
     openssh-server \
-    && apt clean \
+    && apt clean
 
 WORKDIR /app
 
-COPY ./Monitoring/* /app
+COPY . /app
 
 RUN chmod +x *.sh
 
