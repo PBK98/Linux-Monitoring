@@ -76,13 +76,22 @@ echo 'agent_api_key_test' > "$AGENT_HOME/api_keys/t_secret.key"
 
 chown -R root:agent-common "$AGENT_HOME"
 
+chgrp agent-core /home/agent-admin
+chmod 750 /home/agent-admin
+
+chgrp agent-core "$AGENT_HOME"
+chmod 750 "$AGENT_HOME"
+
 chown agent-test:agent-common "$AGENT_HOME/upload_files"
 chmod 770 "$AGENT_HOME/upload_files"
 
-chgrp -R agent-common "$AGENT_HOME/api_keys" /var/log/agent-app
+chgrp -R agent-core "$AGENT_HOME/api_keys" /var/log/agent-app
 chmod 770 "$AGENT_HOME/api_keys" /var/log/agent-app
-
 chmod 660 "$AGENT_HOME/api_keys/t_secret.key"
+
+touch /var/log/agent-app/monitor.log
+chown root:agent-core /var/log/agent-app/monitor.log
+chmod 660 /var/log/agent-app/monitor.log
 
 chown -R root:agent-common "$AGENT_HOME/bin"
 chmod 750 "$AGENT_HOME/bin/"*.sh
@@ -164,14 +173,14 @@ fi
 if command -v crontab >/dev/null 2>&1; then
 
   (
-    crontab -u root -l 2>/dev/null | grep -v monitor.sh || true
+    crontab -u agent-admin -l 2>/dev/null | grep -v monitor.sh || true
     echo "* * * * * . /etc/profile.d/agent-app.sh; $AGENT_HOME/bin/monitor.sh >> /var/log/agent-app/cron.log 2>&1"
-  ) | crontab -u root -
+  ) | crontab -u agent-admin -
 
   (
-    crontab -u root -l 2>/dev/null | grep -v log_archive.sh || true
+    crontab -u agent-admin -l 2>/dev/null | grep -v log_archive.sh || true
     echo "0 3 * * * $AGENT_HOME/bin/log_archive.sh >> /var/log/agent-app/archive.log 2>&1"
-  ) | crontab -u root -
+  ) | crontab -u agent-admin -
 
 fi
 
