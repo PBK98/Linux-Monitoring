@@ -99,10 +99,24 @@ ENVEOF
 # =========================
 
 if [[ -f /etc/ssh/sshd_config ]]; then
-  sed -i "s/^#\?Port .*/Port $SSH_PORT/" /etc/ssh/sshd_config
+  if grep -Eq '^#?Port ' /etc/ssh/sshd_config; then
+    sed -i "s/^#\?Port .*/Port $SSH_PORT/" /etc/ssh/sshd_config
+  else
+    echo "Port $SSH_PORT" >> /etc/ssh/sshd_config
+  fi
+
   sed -i 's/^#\?PasswordAuthentication .*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+  sed -i 's/^#\?PermitRootLogin .*/PermitRootLogin no/' /etc/ssh/sshd_config
 
   mkdir -p /var/run/sshd
+
+  if [[ -n "${SSH_PASSWORD:-}" ]]; then
+    echo "test:${SSH_PASSWORD}" | chpasswd
+  fi
+
+  service ssh restart 2>/dev/null || service ssh start
+else
+  echo "[WARN] /etc/ssh/sshd_config not found. Check Dockerfile openssh-server installation."
 fi
 
 # =========================
@@ -123,4 +137,70 @@ if command -v crontab >/dev/null 2>&1; then
 
 fi
 
-echo "Setup complete."
+# =========================
+  # Start Services
+  # =========================
+
+  service ssh restart 2>/dev/null || service ssh start
+  service cron restart 2>/dev/null || service cron start
+
+# =========================
+# Runtime Permission Setup
+# =========================
+
+chgrp agent-admin /home/agent-admin
+chmod 750 /home/agent-admin
+
+chgrp agent-admin "$AGENT_HOME"
+chmod 750 "$AGENT_HOME"
+
+chgrp -R agent-admin "$AGENT_HOME/api_keys"
+chmod 750 "$AGENT_HOME/api_keys"
+chmod 640 "$AGENT_HOME/api_keys/t_secret.key"
+
+chgrp -R agent-admin /var/log/agent-app
+chmod 770 /var/log/agent-app
+
+touch /var/log/agent-app/monitor.log
+chown root:agent-admin /var/log/agent-app/monitor.log
+chmod 660 /var/log/agent-app/monitor.log
+
+touch /tmp/agent_app.log
+chown test:dev /tmp/agent_app.log
+chmod 664 /tmp/agent_app.log
+
+chgrp agent-admin /home/agent-admin
+chmod 750 /home/agent-admin
+
+chgrp agent-admin /home/agent-admin/agent-app
+chmod 750 /home/agent-admin/agent-app
+
+chgrp agent-admin /home/agent-admin/agent-app/api_keys
+chmod 750 /home/agent-admin/agent-app/api_keys
+
+chgrp agent-admin /home/agent-admin/agent-app/api_keys/t_secret.key
+chmod 640 /home/agent-admin/agent-app/api_keys/t_secret.key
+
+# =========================
+# Start Agent App as test
+# =========================
+
+if ! pgrep -f "agent_app.py" >/dev/null 2>&1; then
+  su - test -c "source /etc/profile.d/agent-app.sh && cd /app && nohup python3 agent_app.py > /tmp/agent_app.log 2>&1 &"
+fi
+
+cat <<MSG
+
+Setup complete.
+
+SSH:
+  Container SSH port : $SSH_PORT
+  Docker run example : docker run -dit -p 20022:$SSH_PORT --name linux-server linux-assignment
+  SSH login example  : ssh test@localhost -p 20022
+
+Agent:
+  Agent port         : $AGENT_PORT
+  Agent log          : /tmp/agent_app.log
+  Monitor log        : /var/log/agent-app/monitor.log
+
+MSG
