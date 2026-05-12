@@ -17,6 +17,9 @@ RUN apt update && apt install -y \
 
 WORKDIR /app
 
+EXPOSE 20022
+EXPOSE 15034
+
 COPY ./scripts/*.sh /app
 COPY ./app/agent_app.py /app
 
