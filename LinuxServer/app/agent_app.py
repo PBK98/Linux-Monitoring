@@ -2,7 +2,6 @@
 
 import os
 import sys
-import grp
 import pwd
 import socket
 from pathlib import Path
@@ -17,27 +16,23 @@ REQUIRED_ENVS = {
 }
 
 # =========================
-# [1/5] Group Check
+# [1/5] User Check
 # =========================
+
+REQUIRED_USER = "agent-admin"
 
 current_user = pwd.getpwuid(os.getuid()).pw_name
 
-group_names = [
-    grp.getgrgid(gid).gr_name
-    for gid in os.getgroups()
-]
+print("[1/5] Checking User Account", end=' ')
 
-print("[1/5] Checking User Group", end=' ')
-
-if REQUIRED_GROUP not in group_names:
+if current_user != REQUIRED_USER:
     print("[ERROR]")
     print(f"... Current User : {current_user}")
-    print(f"... Required Group : {REQUIRED_GROUP}")
-    print(f"... Current Groups : {group_names}")
+    print(f"... Required User : {REQUIRED_USER}")
     sys.exit(1)
 
 print("[OK]")
-print(f"... User '{current_user}' belongs to '{REQUIRED_GROUP}'")
+print(f"... Running as service user '{REQUIRED_USER}'")
 
 # =========================
 # [2/5] Environment Variables
@@ -82,23 +77,23 @@ print("... Verified key file with correct key string.")
 # [4/5] Port Check
 # =========================
 
-print("[4/5] Checking Port Availability", end=' ')
+print("[4/5] Starting Agent Port", end=' ')
 
 PORT = int(os.environ.get("AGENT_PORT", "15034"))
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 try:
     sock.bind(("0.0.0.0", PORT))
+    sock.listen(5)
 except OSError:
     print("[ERROR]")
     print(f"... Port {PORT} already in use.")
     sys.exit(1)
 
-sock.close()
-
 print("[OK]")
-print(f"... Port {PORT} available.")
+print(f"... Listening on port {PORT}")
 
 # =========================
 # [5/5] READY
@@ -107,4 +102,6 @@ print(f"... Port {PORT} available.")
 print("[5/5] Agent Status [READY]")
 
 while True:
-    pass
+    conn, addr = sock.accept()
+    conn.sendall(b"Agent READY\n")
+    conn.close()
