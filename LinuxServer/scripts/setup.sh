@@ -14,29 +14,37 @@ AGENT_PORT=${AGENT_PORT:-15034}
 # Group Setup
 # =========================
 
-groupadd -f agent-admin
-groupadd -f dev
+groupadd -f agent-core
 groupadd -f agent-common
 
 # =========================
 # User Setup
 # =========================
 
-# test user
-# primary group: dev
-# secondary group: agent-admin
-if ! id "test" >/dev/null 2>&1; then
-    useradd -m -s /bin/bash -g dev -G agent-admin test
+# agent admin user
+# primary group: agent-common
+# secondary group: agent-core
+if ! id "agent-admin" >/dev/null 2>&1; then
+    useradd -m -s /bin/bash -g agent-common -G agent-core agent-admin
 else
-    usermod -g dev -aG agent-admin test
+    usermod -g agent-common -aG agent-core agent-admin
 fi
 
-# core user
-# primary group: agent-common
-if ! id "core" >/dev/null 2>&1; then
-    useradd -m -s /bin/bash -g agent-common core
+# agent-dev user
+# primary group: agent-core
+# secondary group: agent-admin
+if ! id "agent-dev" >/dev/null 2>&1; then
+    useradd -m -s /bin/bash -g agent-common -G agent-core agent-dev
 else
-    usermod -g agent-common core
+    usermod -g agent-common -aG agent-core agent-dev
+fi
+
+# agent-test user
+# primary group: agent-common
+if ! id "agent-test" >/dev/null 2>&1; then
+    useradd -m -s /bin/bash -g agent-common agent-test
+else
+    usermod -g agent-common agent-test
 fi
 
 # =========================
@@ -68,7 +76,7 @@ echo 'agent_api_key_test' > "$AGENT_HOME/api_keys/t_secret.key"
 
 chown -R root:agent-common "$AGENT_HOME"
 
-chown test:dev "$AGENT_HOME/upload_files"
+chown agent-test:agent-common "$AGENT_HOME/upload_files"
 chmod 770 "$AGENT_HOME/upload_files"
 
 chgrp -R agent-common "$AGENT_HOME/api_keys" /var/log/agent-app
@@ -111,12 +119,42 @@ if [[ -f /etc/ssh/sshd_config ]]; then
   mkdir -p /var/run/sshd
 
   if [[ -n "${SSH_PASSWORD:-}" ]]; then
-    echo "test:${SSH_PASSWORD}" | chpasswd
+    echo "agent-admin:${SSH_PASSWORD}" | chpasswd
   fi
 
   service ssh restart 2>/dev/null || service ssh start
 else
   echo "[WARN] /etc/ssh/sshd_config not found. Check Dockerfile openssh-server installation."
+fi
+
+# =========================
+# Firewall Setup
+# =========================
+
+if command -v ufw >/dev/null 2>&1; then
+
+  echo "[INFO] UFW found. Applying allow rules only."
+
+  ufw --force enable
+
+  ufw allow "${SSH_PORT}/tcp" || true
+  ufw allow "${AGENT_PORT}/tcp" || true
+
+  echo "[WARN] UFW enable skipped inside Docker."
+  echo "[INFO] Use docker run -p ${SSH_PORT}:${SSH_PORT} -p ${AGENT_PORT}:${AGENT_PORT}"
+
+elif command -v firewall-cmd >/dev/null 2>&1; then
+
+  firewall-cmd --permanent --add-port="${SSH_PORT}/tcp" || true
+  firewall-cmd --permanent --add-port="${AGENT_PORT}/tcp" || true
+  firewall-cmd --reload || true
+
+  echo "[INFO] firewalld rules applied."
+
+else
+
+  echo "[WARN] No firewall service found."
+
 fi
 
 # =========================
@@ -148,45 +186,33 @@ fi
 # Runtime Permission Setup
 # =========================
 
-chgrp agent-admin /home/agent-admin
+chgrp agent-core /home/agent-admin
 chmod 750 /home/agent-admin
 
-chgrp agent-admin "$AGENT_HOME"
+chgrp agent-core "$AGENT_HOME"
 chmod 750 "$AGENT_HOME"
 
-chgrp -R agent-admin "$AGENT_HOME/api_keys"
+chgrp -R agent-core "$AGENT_HOME/api_keys"
 chmod 750 "$AGENT_HOME/api_keys"
 chmod 640 "$AGENT_HOME/api_keys/t_secret.key"
 
-chgrp -R agent-admin /var/log/agent-app
+chgrp -R agent-common /var/log/agent-app
 chmod 770 /var/log/agent-app
 
 touch /var/log/agent-app/monitor.log
-chown root:agent-admin /var/log/agent-app/monitor.log
+chown root:agent-common /var/log/agent-app/monitor.log
 chmod 660 /var/log/agent-app/monitor.log
 
 touch /tmp/agent_app.log
-chown test:dev /tmp/agent_app.log
+chown agent-admin:agent-common /tmp/agent_app.log
 chmod 664 /tmp/agent_app.log
-
-chgrp agent-admin /home/agent-admin
-chmod 750 /home/agent-admin
-
-chgrp agent-admin /home/agent-admin/agent-app
-chmod 750 /home/agent-admin/agent-app
-
-chgrp agent-admin /home/agent-admin/agent-app/api_keys
-chmod 750 /home/agent-admin/agent-app/api_keys
-
-chgrp agent-admin /home/agent-admin/agent-app/api_keys/t_secret.key
-chmod 640 /home/agent-admin/agent-app/api_keys/t_secret.key
 
 # =========================
 # Start Agent App as test
 # =========================
 
-if ! pgrep -f "agent_app.py" >/dev/null 2>&1; then
-  su - test -c "source /etc/profile.d/agent-app.sh && cd /app && nohup python3 agent_app.py > /tmp/agent_app.log 2>&1 &"
+if ! pgrep -f "python3 agent_app.py" >/dev/null 2>&1; then
+  su agent-admin -c "source /etc/profile.d/agent-app.sh && cd /app && nohup python3 agent_app.py >> /tmp/agent_app.log 2>&1 < /dev/null &"
 fi
 
 cat <<MSG
@@ -196,7 +222,7 @@ Setup complete.
 SSH:
   Container SSH port : $SSH_PORT
   Docker run example : docker run -dit -p 20022:$SSH_PORT --name linux-server linux-assignment
-  SSH login example  : ssh test@localhost -p 20022
+  SSH login example  : ssh agent-admin@localhost -p 20022
 
 Agent:
   Agent port         : $AGENT_PORT
