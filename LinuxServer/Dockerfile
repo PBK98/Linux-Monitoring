@@ -11,8 +11,9 @@ RUN apt update && apt install -y \
     iproute2 \
     vim \
     systemctl \
+    gzip \
+    openssh-server \
     && apt clean \
-    gzip
 
 WORKDIR /app
 
