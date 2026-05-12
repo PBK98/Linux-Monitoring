@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 AGENT_HOME=/home/agent-admin/agent-app
+NEW_PORT=2222
+
+sed -i "s/^#\?Port .*/Port $NEW_PORT/" /etc/ssh/sshd_config
+
+service ssh restart
 
 sudo groupadd -f agent-common
 sudo groupadd -f agent-core
