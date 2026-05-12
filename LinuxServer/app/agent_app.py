@@ -1,89 +1,110 @@
 #!/usr/bin/env python3
-import os, socket, sys, time
 
-def check_env():
-    required = {
-        'AGENT_HOME': '/home/agent-admin/agent-app',
-        'AGENT_PORT': '15034',
-        'AGENT_UPLOAD_DIR': os.path.join(os.environ.get('AGENT_HOME',''), 'upload_files'),
-        'AGENT_KEY_PATH': os.path.join(os.environ.get('AGENT_HOME',''), 'api_keys/t_secret.key'),
-        'AGENT_LOG_DIR': '/var/log/agent-app',
-    }
-    for k, expected in required.items():
-        actual = os.environ.get(k)
-        if actual != expected:
-            print(f"[ERROR] {k} invalid: {actual!r}, expected: {expected!r}")
-            return False
-    return True
+import os
+import sys
+import grp
+import pwd
+import socket
+from pathlib import Path
 
-def boot_check():
-    print("Starting Agent Boot Sequence...")
-    print("[1/5] Checking User Account", end=' ')
-    if os.environ.get('USER') != 'agent-admin':
-        print('[ERROR]')
-        return False
-    print('[OK]')
-    print("... Running as service user 'agent-admin'")
+print("Starting Agent Boot Sequence...")
 
-    print("[2/5] Verifying Environment Variables", end=' ')
-    if not check_env():
-        return False
-    print('[OK]')
-    print('... All required Envs correct')
+REQUIRED_GROUP = "agent-admin"
 
-    print("[3/5] Checking Required Files", end=' ')
-    key_path = os.environ['AGENT_KEY_PATH']
-    try:
-        with open(key_path) as f:
-            key = f.read().strip()
-        if key != 'agent_api_key_test':
-            print('[ERROR]')
-            return False
-    except Exception:
-        print('[ERROR]')
-        return False
-    print('[OK]')
-    print('... Verified key file with correct key string.')
+REQUIRED_ENVS = {
+    'AGENT_HOME': '/home/agent-admin/agent-app',
+    'AGENT_LOG_DIR': '/var/log/agent-app',
+}
 
-    port = int(os.environ['AGENT_PORT'])
-    print("[4/5] Checking Port Availability", end=' ')
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        s.bind(('0.0.0.0', port))
-        s.close()
-    except OSError:
-        print('[ERROR]')
-        return False
-    print('[OK]')
-    print(f'... Port {port} is available.')
+# =========================
+# [1/5] Group Check
+# =========================
 
-    print("[5/5] Verifying Log Permission", end=' ')
-    log_dir = os.environ['AGENT_LOG_DIR']
-    if not os.access(log_dir, os.W_OK):
-        print('[ERROR]')
-        return False
-    print('[OK]')
-    print(f'... Log directory is writable: {log_dir}')
-    print('-' * 60)
-    print('All Boot Checks Passed!')
-    print('Agent READY')
-    return True
+current_user = pwd.getpwuid(os.getuid()).pw_name
 
-def main():
-    if not boot_check():
+group_names = [
+    grp.getgrgid(gid).gr_name
+    for gid in os.getgroups()
+]
+
+print("[1/5] Checking User Group", end=' ')
+
+if REQUIRED_GROUP not in group_names:
+    print("[ERROR]")
+    print(f"... Current User : {current_user}")
+    print(f"... Required Group : {REQUIRED_GROUP}")
+    print(f"... Current Groups : {group_names}")
+    sys.exit(1)
+
+print("[OK]")
+print(f"... User '{current_user}' belongs to '{REQUIRED_GROUP}'")
+
+# =========================
+# [2/5] Environment Variables
+# =========================
+
+print("[2/5] Verifying Environment Variables", end=' ')
+
+for key, value in REQUIRED_ENVS.items():
+    if os.environ.get(key) != value:
+        print("[ERROR]")
+        print(f"... Invalid ENV : {key}")
         sys.exit(1)
-    port = int(os.environ['AGENT_PORT'])
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.bind(('0.0.0.0', port))
-    s.listen(5)
-    try:
-        while True:
-            conn, addr = s.accept()
-            conn.sendall(b'Agent READY\n')
-            conn.close()
-    except KeyboardInterrupt:
-        pass
 
-if __name__ == '__main__':
-    main()
+print("[OK]")
+print("... All required Envs correct")
+
+# =========================
+# [3/5] Key File Check
+# =========================
+
+print("[3/5] Checking Required Files", end=' ')
+
+key_file = Path(os.environ['AGENT_HOME']) / 'api_keys/t_secret.key'
+
+if not key_file.exists():
+    print("[ERROR]")
+    print("... Key file missing.")
+    sys.exit(1)
+
+with open(key_file) as f:
+    key = f.read().strip()
+
+if key != 'agent_api_key_test':
+    print("[ERROR]")
+    print("... Invalid key.")
+    sys.exit(1)
+
+print("[OK]")
+print("... Verified key file with correct key string.")
+
+# =========================
+# [4/5] Port Check
+# =========================
+
+print("[4/5] Checking Port Availability", end=' ')
+
+PORT = int(os.environ.get("AGENT_PORT", "15034"))
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+try:
+    sock.bind(("0.0.0.0", PORT))
+except OSError:
+    print("[ERROR]")
+    print(f"... Port {PORT} already in use.")
+    sys.exit(1)
+
+sock.close()
+
+print("[OK]")
+print(f"... Port {PORT} available.")
+
+# =========================
+# [5/5] READY
+# =========================
+
+print("[5/5] Agent Status [READY]")
+
+while True:
+    pass

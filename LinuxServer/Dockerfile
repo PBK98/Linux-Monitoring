@@ -17,7 +17,8 @@ RUN apt update && apt install -y \
 
 WORKDIR /app
 
-COPY . /app
+COPY ./scripts/*.sh /app
+COPY ./app/agent_app.py /app
 
 RUN chmod +x *.sh
 
