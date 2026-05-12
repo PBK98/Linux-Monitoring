@@ -13,6 +13,7 @@ RUN apt update && apt install -y \
     vim \
     gzip \
     openssh-server \
+    ufw \
     && apt clean
 
 WORKDIR /app
