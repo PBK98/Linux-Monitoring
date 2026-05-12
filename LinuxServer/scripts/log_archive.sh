@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -u
+set -euo pipefail
 
 SRC_DIR="/var/log/agent-app"
 ARCHIVE_DIR="/var/log/monitor/agent-app/archive"
@@ -16,4 +16,3 @@ find "$SRC_DIR" -type f -name '*.log' -mtime +7 -exec sh -c '
 ' sh "$ARCHIVE_DIR" {} +
 
 find "$ARCHIVE_DIR" -type f -name '*.gz' -mtime +30 -delete
-EOF
