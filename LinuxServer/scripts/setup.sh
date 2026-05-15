@@ -61,11 +61,12 @@ mkdir -p \
 # =========================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-cp "$SCRIPT_DIR/agent_app.py" "$AGENT_HOME/agent_app.py"
+cp "$PROJECT_DIR/app/agent-app" "$AGENT_HOME/agent-app"
 cp "$SCRIPT_DIR/monitor.sh" "$SCRIPT_DIR/report.sh" "$SCRIPT_DIR/log_archive.sh" "$AGENT_HOME/bin/"
 
-chmod +x "$AGENT_HOME/agent_app.py"
+chmod +x "$AGENT_HOME/agent-app"
 chmod +x "$AGENT_HOME/bin/"*.sh
 
 echo 'agent_api_key_test' > "$AGENT_HOME/api_keys/t_secret.key"
@@ -220,8 +221,8 @@ chmod 664 /tmp/agent_app.log
 # Start Agent App as test
 # =========================
 
-if ! pgrep -f "python3 agent_app.py" >/dev/null 2>&1; then
-  su agent-admin -c "source /etc/profile.d/agent-app.sh && cd /app && nohup python3 agent_app.py >> /tmp/agent_app.log 2>&1 < /dev/null &"
+if ! pgrep -f "./agent-app" >/dev/null 2>&1; then
+  su agent-admin -c "source /etc/profile.d/agent-app.sh && cd /app && nohup ./agent-app >> /tmp/agent_app.log 2>&1 < /dev/null &"
 fi
 
 cat <<MSG
@@ -230,7 +231,6 @@ Setup complete.
 
 SSH:
   Container SSH port : $SSH_PORT
-  Docker run example : docker run -dit -p 20022:$SSH_PORT --name linux-server linux-assignment
   SSH login example  : ssh agent-admin@localhost -p 20022
 
 Agent:
