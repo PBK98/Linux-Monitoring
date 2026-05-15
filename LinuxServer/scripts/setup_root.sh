@@ -90,6 +90,12 @@ if [[ -f /etc/ssh/sshd_config ]]; then
   fi
 
   service ssh restart 2>/dev/null || service ssh start
+  
+  systemctl daemon-reload
+  systemctl stop ssh.socket
+  systemctl disable ssh.socket
+  systemctl restart ssh
+
 else
   echo "[WARN] /etc/ssh/sshd_config not found. Check Dockerfile openssh-server installation."
 fi
