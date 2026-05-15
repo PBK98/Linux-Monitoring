@@ -150,7 +150,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/../app" && pwd)"
 
 cp "$PROJECT_DIR/agent-app" "$AGENT_HOME/agent-app"
-cp "$SCRIPT_DIR/monitor.sh" "$SCRIPT_DIR/report.sh" "$SCRIPT_DIR/log_archive.sh" "$AGENT_HOME/bin/"
+cp "$SCRIPT_DIR/monitor.sh" "$SCRIPT_DIR/report.sh" "$SCRIPT_DIR/log_archive.sh" "$SCRIPT_DIR/setup_agent-admin.sh" "$AGENT_HOME/bin/"
 
 chmod +x "$AGENT_HOME/agent-app"
 chmod +x "$AGENT_HOME/bin/"*.sh
