@@ -10,6 +10,8 @@ fi
 # Permission Setup
 # =========================
 
+AGENT_HOME=/home/agent-admin/agent-app
+
 chown -R root:agent-common "$AGENT_HOME"
 
 chgrp agent-core /home/agent-admin
