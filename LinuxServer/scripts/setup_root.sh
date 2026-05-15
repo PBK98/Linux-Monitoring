@@ -92,7 +92,7 @@ if [[ -f /etc/ssh/sshd_config ]]; then
   service ssh restart 2>/dev/null || service ssh start
 
 else
-  echo "[WARN] /etc/ssh/sshd_config not found. Check Dockerfile openssh-server installation."
+  echo "[WARN] /etc/ssh/sshd_config not found. Check openssh-server installation."
 fi
 
 systemctl daemon-reload
@@ -131,11 +131,11 @@ else
 
 fi
 
-AGENT_HOME=/home/agent-admin/agent-app
-
 # =========================
 # Directory Setup
 # =========================
+
+AGENT_HOME=/home/agent-admin/agent-app
 
 mkdir -p \
   "$AGENT_HOME"/{upload_files,api_keys,bin} \
