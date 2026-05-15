@@ -6,32 +6,6 @@ if [[ "$(id -un)" != "agent-admin" ]]; then
   exit 1
 fi
 
-AGENT_HOME=/home/agent-admin/agent-app
-
-# =========================
-# Directory Setup
-# =========================
-
-mkdir -p \
-  "$AGENT_HOME"/{upload_files,api_keys,bin} \
-  /var/log/agent-app \
-  /var/log/monitor/agent-app/archive
-
-# =========================
-# File Copy
-# =========================
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="$(cd "$SCRIPT_DIR/../app" && pwd)"
-
-cp "$PROJECT_DIR/agent-app" "$AGENT_HOME/agent-app"
-cp "$SCRIPT_DIR/monitor.sh" "$SCRIPT_DIR/report.sh" "$SCRIPT_DIR/log_archive.sh" "$AGENT_HOME/bin/"
-
-chmod +x "$AGENT_HOME/agent-app"
-chmod +x "$AGENT_HOME/bin/"*.sh
-
-echo 'agent_api_key_test' > "$AGENT_HOME/api_keys/t_secret.key"
-
 # =========================
 # Permission Setup
 # =========================

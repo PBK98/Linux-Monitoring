@@ -90,15 +90,16 @@ if [[ -f /etc/ssh/sshd_config ]]; then
   fi
 
   service ssh restart 2>/dev/null || service ssh start
-  
-  systemctl daemon-reload
-  systemctl stop ssh.socket
-  systemctl disable ssh.socket
-  systemctl restart ssh
 
 else
   echo "[WARN] /etc/ssh/sshd_config not found. Check Dockerfile openssh-server installation."
 fi
+
+systemctl daemon-reload
+systemctl stop ssh.socket
+systemctl disable ssh.socket
+systemctl restart ssh
+
 
 # =========================
 # Firewall Setup
@@ -113,10 +114,10 @@ if command -v ufw >/dev/null 2>&1; then
   ufw allow "${SSH_PORT}/tcp" || true
   ufw allow "${AGENT_PORT}/tcp" || true
 
-  echo "[WARN] UFW enable skipped inside Docker."
-  echo "[INFO] Use docker run -p ${SSH_PORT}:${SSH_PORT} -p ${AGENT_PORT}:${AGENT_PORT}"
+  echo "[INFO] UFW rules applied."
 
 elif command -v firewall-cmd >/dev/null 2>&1; then
+  echo "[WARN] UFW is not found Apply firewall."
 
   firewall-cmd --permanent --add-port="${SSH_PORT}/tcp" || true
   firewall-cmd --permanent --add-port="${AGENT_PORT}/tcp" || true
@@ -129,3 +130,29 @@ else
   echo "[WARN] No firewall service found."
 
 fi
+
+AGENT_HOME=/home/agent-admin/agent-app
+
+# =========================
+# Directory Setup
+# =========================
+
+mkdir -p \
+  "$AGENT_HOME"/{upload_files,api_keys,bin} \
+  /var/log/agent-app \
+  /var/log/monitor/agent-app/archive
+
+# =========================
+# File Copy
+# =========================
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/../app" && pwd)"
+
+cp "$PROJECT_DIR/agent-app" "$AGENT_HOME/agent-app"
+cp "$SCRIPT_DIR/monitor.sh" "$SCRIPT_DIR/report.sh" "$SCRIPT_DIR/log_archive.sh" "$AGENT_HOME/bin/"
+
+chmod +x "$AGENT_HOME/agent-app"
+chmod +x "$AGENT_HOME/bin/"*.sh
+
+echo 'agent_api_key_test' > "$AGENT_HOME/api_keys/t_secret.key"
