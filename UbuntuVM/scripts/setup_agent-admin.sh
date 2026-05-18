@@ -5,7 +5,6 @@
 # =========================
 # This script must be run as agent-admin.
 # It performs:
-# - application file copy
 # - cron registration
 # - agent-app execution
 
@@ -21,28 +20,6 @@ fi
 # =========================
 
 source /etc/profile.d/agent-app.sh
-
-# =========================
-# Project Path
-# =========================
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-
-# =========================
-# File Copy
-# =========================
-# Copy:
-# - agent-app binary
-# - monitoring scripts
-
-cp "$PROJECT_DIR/app/agent-app" "$AGENT_HOME/app/agent-app"
-
-cp \
-  "$SCRIPT_DIR/monitor.sh" \
-  "$SCRIPT_DIR/report.sh" \
-  "$SCRIPT_DIR/log_archive.sh" \
-  "$AGENT_HOME/bin/"
 
 # =========================
 # Permission Setup

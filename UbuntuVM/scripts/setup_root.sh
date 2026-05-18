@@ -48,6 +48,7 @@ apt install -y \
     vim \
     gzip \
     openssh-server \
+    rsync \
     ufw
 
 apt clean
@@ -206,9 +207,9 @@ systemctl restart cron || true
 # Move Linux-Monitoring Directory
 # =========================
 
-mv /root/Linux-Monitoring/UbuntuVM /home/agent-admin/
-rm /root/Linux-Monitoring/UbuntuVM/scripts/setup_root.sh
-chown -R agent-admin:agent-core /home/agent-admin/UbuntuVM
+rsync -av --exclude='setup_root.sh' /root/Linux-Monitoring/UbuntuVM/scripts/ "$AGENT_HOME/bin/"
+rsync -av /root/Linux-Monitoring/UbuntuVM/app/ "$AGENT_HOME/app/"
+chown -R agent-admin:agent-core "$AGENT_HOME"/{app,bin}
 
 # =========================
 # Setup Complete
