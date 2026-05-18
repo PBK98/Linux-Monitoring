@@ -43,7 +43,7 @@ awk "BEGIN{exit !($MEM > $MEM_THRESHOLD)}" && echo "[WARNING] MEM threshold exce
 [[ "$DISK" -gt "$DISK_THRESHOLD" ]] && echo "[WARNING] DISK threshold exceeded (${DISK}% > ${DISK_THRESHOLD}%)"
 
 mkdir -p "$(dirname "$LOG_FILE")"
-printf '[%s] PID:%s CPU:%s%% MEM:%s%% DISK_USED:%s%%\n' "$(ts)" "$PID" "$CPU" "$MEM" "$DISK" >> "$LOG_FILE"
+printf '[%s] PID:%s CPU:%s%% MEM:%s%% DISK_USED:%s%% MEM_RSS:%s KB\n' "$(ts)" "$PID" "$CPU" "$MEM" "$DISK" "$MEM_RSS" >> "$LOG_FILE"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [[ -x "$SCRIPT_DIR/report.sh" ]]; then
