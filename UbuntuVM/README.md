@@ -14,11 +14,11 @@ apt update && sudo apt install -y git && sudo git clone https://github.com/PBK98
 ```
 4. setup_root.sh 에서 자동 agent-admin 계정으로 전환 후 setup_agent-admin.sh 실행
 ```bash
-cd /home/agent-admin/bin && bash setup_agent-admin.sh 
+cd /home/agent-admin/agent-app/bin/scripts/ && bash setup_agent-admin.sh 
 ```
 5. monitor.sh 실행
 ```bash
-bash /home/agent-admin/bin/monitor.sh
+bash /home/agent-admin/agent-app/bin/scripts/monitor.sh
 ```
 6. log 확인
 ```bash

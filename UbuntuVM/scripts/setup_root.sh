@@ -210,7 +210,7 @@ systemctl restart cron || true
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-rsync -av --exclude='setup_root.sh' "$SCRIPT_DIR" "$AGENT_HOME/bin/"
+rsync -av --exclude='setup_root.sh' "$SCRIPT_DIR/" "$AGENT_HOME/bin/"
 rsync -av "$PROJECT_DIR/app/" "$AGENT_HOME/app/"
 chown -R agent-admin:agent-core "$AGENT_HOME"/{app,bin}
 
