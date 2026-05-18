@@ -1,0 +1,1 @@
+apt update && apt install -y git && git clone https://github.com/PBK98/Linux-Monitoring.git
