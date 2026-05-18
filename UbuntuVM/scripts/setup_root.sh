@@ -192,7 +192,7 @@ if command -v ufw >/dev/null 2>&1; then
 
   ufw allow "${SSH_PORT}/tcp" || true
   ufw allow "${AGENT_PORT}/tcp" || true
-
+  ufw enable || true
 fi
 
 # =========================
@@ -201,6 +201,14 @@ fi
 
 systemctl enable cron || true
 systemctl restart cron || true
+
+# =========================
+# Move Linux-Monitoring Directory
+# =========================
+
+mv /root/Linux-Monitoring/UbuntuVM /home/agent-admin/
+rm /root/Linux-Monitoring/UbuntuVM/scripts/setup_root.sh
+chown -R agent-admin:agent-core /home/agent-admin/UbuntuVM
 
 # =========================
 # Setup Complete
