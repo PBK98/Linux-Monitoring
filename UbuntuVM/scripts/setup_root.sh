@@ -234,3 +234,5 @@ SSH:
   ssh agent-admin@localhost -p ${SSH_PORT}
 
 MSG
+
+su - agent-admin
