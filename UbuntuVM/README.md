@@ -16,11 +16,7 @@ apt update && sudo apt install -y git && sudo git clone https://github.com/PBK98
 ```bash
 cd /home/agent-admin/agent-app/bin/scripts/ && bash setup_agent-admin.sh 
 ```
-5. monitor.sh 실행
-```bash
-bash /home/agent-admin/agent-app/bin/scripts/monitor.sh
-```
-6. log 확인
+5. monitor.log 확인
 ```bash
 tail -f /var/log/agent-app/monitor.log
 ```

@@ -59,7 +59,7 @@ chmod 664 /tmp/agent_app.log
 
 (
   crontab -l 2>/dev/null | grep -v log_archive.sh || true
-  echo "0 3 * * * $AGENT_HOME/bin/log_archive.sh >> /var/log/agent-app/archive.log 2>&1"
+  echo "0 3 * * * . /etc/profile.d/agent-app.sh; $AGENT_HOME/bin/log_archive.sh >> /var/log/agent-app/archive.log 2>&1"
 ) | crontab -
 
 # =========================
