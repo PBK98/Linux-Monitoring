@@ -1,12 +1,13 @@
 1. 요구사항 수행 내역서(문서 1개)
 
-	•	수행 내역
+==================	수행 내역	==================
 
-    ◦	설정/명령어 기록 (SSH 포트, 방화벽 규칙, 계정/그룹/ACL, 디렉토리/권한, 환경 변수, cron 등록 등)
+◦	설정/명령어 기록 (SSH 포트, 방화벽 규칙, 계정/그룹/ACL, 디렉토리/권한, 환경 변수, cron 등록 등)
 
-	•	필수 증거 자료 체크리스트
-	
-    ◦	SSH 포트 변경(20022) 및 Root 원격 접속 차단 설정 확인 내역
+
+==================	필수 증거 자료 체크리스트	==================
+
+◦	SSH 포트 변경(20022) 및 Root 원격 접속 차단 설정 확인 내역
 ```bash
 root@ubuntu:~# grep -E '^Port |^PermitRootLogin' /etc/ssh/sshd_config
 ```
@@ -71,7 +72,17 @@ root@ubuntu:~# ls -ld /var/log/agent-app
 
 drwxrwx--- 1 agent-admin agent-core 94 May 19 20:44 /var/log/agent-app
 ```
+◦	환경변수 확인 내역
 
+```bash
+agent-admin@ubuntu:~/agent-app/bin$ cat /etc/profile.d/agent-app.sh
+export AGENT_HOME=/home/agent-admin/agent-app
+export AGENT_PORT=15034
+export AGENT_UPLOAD_DIR=/home/agent-admin/agent-app/upload_files
+export AGENT_KEY_PATH=/home/agent-admin/agent-app/api_keys/t_secret.key
+export AGENT_LOG_DIR=/var/log/agent-app
+
+```
 
 ◦	앱 Boot Sequence 5단계 [OK] 및 “Agent READY” 확인 내역
 
@@ -174,7 +185,9 @@ agent-admin@ubuntu:~/agent-app/bin$ crontab -l
 
 
 2. 자동화 스크립트 소스코드
-    •	monitor.sh : 시스템 상태 수집 및 로깅 스크립트
+    
+==========  monitor.sh : 시스템 상태 수집 및 로깅 스크립트  ==========
+
 ```bash
 #!/usr/bin/env bash
 set -u
