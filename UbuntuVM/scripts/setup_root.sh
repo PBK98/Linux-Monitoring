@@ -49,6 +49,7 @@ apt install -y \
     gzip \
     openssh-server \
     rsync \
+    logrotate \
     ufw
 
 apt clean
@@ -195,6 +196,27 @@ if command -v ufw >/dev/null 2>&1; then
   ufw allow "${AGENT_PORT}/tcp" || true
   ufw enable || true
 fi
+
+# =========================
+# Logrotate Setup
+# =========================
+# monitor.log:
+# - rotate at 10MB
+# - keep 10 backup files
+# - compress old logs
+
+cat > /etc/logrotate.d/agent-app <<EOF
+/var/log/agent-app/monitor.log {
+    size 10M
+    rotate 10
+    compress
+    missingok
+    notifempty
+    copytruncate
+}
+EOF
+
+chmod 644 /etc/logrotate.d/agent-app
 
 # =========================
 # Cron Service Setup
