@@ -38,6 +38,7 @@ echo "CPU Usage : ${CPU}%"
 echo "MEM Usage : ${MEM}%"
 echo "DISK Used : ${DISK}%"
 echo "MEM RSS : ${MEM_RSS}"
+
 awk "BEGIN{exit !($CPU > $CPU_THRESHOLD)}" && echo "[WARNING] CPU threshold exceeded (${CPU}% > ${CPU_THRESHOLD}%)"
 awk "BEGIN{exit !($MEM > $MEM_THRESHOLD)}" && echo "[WARNING] MEM threshold exceeded (${MEM}% > ${MEM_THRESHOLD}%)"
 [[ "$DISK" -gt "$DISK_THRESHOLD" ]] && echo "[WARNING] DISK threshold exceeded (${DISK}% > ${DISK_THRESHOLD}%)"
