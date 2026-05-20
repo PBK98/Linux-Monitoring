@@ -19,8 +19,6 @@ fi
 
 echo "[INFO] Starting shell..."
 
-orb -m "$VM_NAME" sudo -i
+orb -m "$VM_NAME" sudo bash -lc 'apt update && apt install -y git && git clone https://github.com/PBK98/Linux-Monitoring.git'
 
-orb -m "$VM_NAME" bash -lc 'apt update && apt install -y git && git clone https://github.com/PBK98/Linux-Monitoring.git'
-
-orb shell -m "$VM_NAME"
+orb shell -m "$VM_NAME" sudo -i
